@@ -70,6 +70,21 @@ class AnnouncementController {
 		});
 	}
 
+	async getById(req, res) {
+		const { id } = req.params;
+		if (!id) {
+			await this.setValidationError({'error': 'ValidationError', 'message': 'Announcement not exists'});
+		}
+
+		if (this.errors.length) {
+			return res.status(400).json(this.getValidationErrors());
+		}
+
+		const response = await Announcement.findByPk(id);
+
+		return res.json(response);
+	}
+
 	async getAllForListing(req, res) {
 		const response = await Announcement.findAll({
 			order: [

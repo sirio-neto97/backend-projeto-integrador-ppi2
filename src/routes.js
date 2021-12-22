@@ -7,22 +7,22 @@ import CompanyController from './app/controllers/CompanyController';
 import MessageController from './app/controllers/MessageController';
 
 import authMiddleware from './app/middlewares/auth';
+import cors from 'cors';
 
 const routes = new Router();
 
-routes.get('/', function(req, res) {
-    return res.json({'message': 'Hello world'});
-});
+routes.use(cors());
 
 routes.post('/sessions', SessionController.store);
 routes.post('/sendMessage', MessageController.send.bind(MessageController));
 
-routes.use(authMiddleware);
+// routes.use(authMiddleware);
 routes.post('/users', UserController.store);
 routes.put('/users', UserController.update);
 
 // Rotas anúncios
 routes.get('/announcements', AnnouncementController.getAllForListing);
+routes.get('/announcements/:id', AnnouncementController.getById.bind(AnnouncementController));
 routes.post('/announcements', AnnouncementController.store.bind(AnnouncementController));
 routes.put('/announcements/:id', AnnouncementController.update.bind(AnnouncementController));
 routes.delete('/announcements/:id', AnnouncementController.delete.bind(AnnouncementController));
