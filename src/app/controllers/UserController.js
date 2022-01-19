@@ -108,7 +108,10 @@ class UserController {
 	}
 
 	static getValidationErrors() {
-		return this.errors;
+		var response = this.errors;
+		this.errors = [];
+
+		return response;
 	}
 }
 

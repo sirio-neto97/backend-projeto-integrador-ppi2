@@ -1,12 +1,20 @@
-import Announcement from '../models/Announcement';
+import crypto from 'crypto';
+import fs from 'fs';
+import { resolve } from 'path';
 import * as Yup from 'yup';
+
+import Announcement from '../models/Announcement';
+import AnnouncementComponent from '../models/AnnouncementComponent';
+import AnnouncementImage from '../models/AnnouncementImage';
 
 class AnnouncementController {
 	constructor() {
 		this.errors = [];
+		this.imagesPath = resolve(__dirname, '..', '..', '..', 'tmp', 'uploads');
 	}
 
 	async store(req, res) {
+		const that = this;
 		await this.validateStore(req.body);
 
 		if (this.errors.length) {
@@ -80,7 +88,19 @@ class AnnouncementController {
 			return res.status(400).json(this.getValidationErrors());
 		}
 
-		const response = await Announcement.findByPk(id);
+		var response = await Announcement.findByPk(id);
+
+		const announcementImages = await AnnouncementImage.findAll({
+			where: {
+				id_announcement: id
+			},
+			attributes: ['id', 'path']
+		});
+
+		response = {
+			...response,
+			images: announcementImages
+		}
 
 		return res.json(response);
 	}
@@ -132,6 +152,39 @@ class AnnouncementController {
 			'id': id,
 			'message': 'Announcement deleted successfully'
 		});
+	}
+
+	async storeFiles(req, res) {
+		const that = this;
+		const files = req.files.files.length ? req.files.files : [req.files.files];
+		const { announcementId } = req.params;
+		var response = [];
+
+		if (!files.length) {
+			return;
+		}
+
+		await files.map(async function(file) {
+			const fileName = crypto.randomBytes(10).toString('hex') + file.name;
+			const path = that.imagesPath + '/' + fileName;
+
+			fs.writeFile(path, file.data, function(error) {
+				if (error) {
+					return res.status(500).json(error);
+				}
+			});
+
+			const { id } = await AnnouncementImage.create({
+				'id_announcement': announcementId,
+				'path': path
+			});
+
+			response.push({'id': id, 'path': path});
+		});
+
+		return res.json({
+			'uploadedImages': response
+		})
 	}
 
 	async validateStore(data) {
@@ -191,7 +244,10 @@ class AnnouncementController {
 	}
 
 	getValidationErrors() {
-		return this.errors;
+		var response = this.errors;
+		this.errors = [];
+
+		return response;
 	}
 }
 

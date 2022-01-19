@@ -3,10 +3,11 @@ import databaseConfig from '../config/database';
 import User from '../app/models/User';
 import Announcement from '../app/models/Announcement';
 import AnnouncementComponent from '../app/models/AnnouncementComponent';
+import AnnouncementImage from '../app/models/AnnouncementImage';
 import Component from '../app/models/Component';
 import Company from '../app/models/Company';
 
-const models = [User, Announcement, AnnouncementComponent, Component, Company];
+const models = [User, Announcement, AnnouncementComponent, AnnouncementImage, Component, Company];
 
 class Database {
 	constructor() {

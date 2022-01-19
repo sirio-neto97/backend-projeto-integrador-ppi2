@@ -1,4 +1,10 @@
-import { Router } from 'express';
+import cors from 'cors';
+import express, { Router } from 'express';
+import fileUpload from 'express-fileupload';
+import FileManagementConfig from './config/filemanagement';
+
+import authMiddleware from './app/middlewares/auth';
+
 import UserController from './app/controllers/UserController';
 import SessionController from './app/controllers/SessionController';
 import AnnouncementController from './app/controllers/AnnouncementController';
@@ -6,15 +12,13 @@ import ComponentController from './app/controllers/ComponentController';
 import CompanyController from './app/controllers/CompanyController';
 import MessageController from './app/controllers/MessageController';
 
-import authMiddleware from './app/middlewares/auth';
-import cors from 'cors';
-
 const routes = new Router();
 
 routes.use(cors());
 
 routes.post('/sessions', SessionController.store);
 routes.post('/sendMessage', MessageController.send.bind(MessageController));
+routes.use('/files', express.static(FileManagementConfig.public.path));
 
 // routes.use(authMiddleware);
 routes.post('/users', UserController.store);
@@ -35,5 +39,8 @@ routes.delete('/components/:id', ComponentController.delete.bind(ComponentContro
 
 // Rota dados da empresa
 routes.post('/company', CompanyController.store.bind(CompanyController));
+
+routes.use(fileUpload(FileManagementConfig.fileUploadConfig));
+routes.post('/announcements/files/:announcementId', AnnouncementController.storeFiles.bind(AnnouncementController));
 
 export default routes;
