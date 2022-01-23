@@ -8,8 +8,5 @@ module.exports = {
 		'timestamps': true,
 		'underscored': true,
 		'underscoredAll': true
-	},
-	'query': {
-		'raw': true
 	}
 }

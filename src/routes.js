@@ -40,6 +40,8 @@ routes.delete('/components/:id', ComponentController.delete.bind(ComponentContro
 // Rota dados da empresa
 routes.post('/company', CompanyController.store.bind(CompanyController));
 
+
+routes.delete('/files', AnnouncementController.deleteFilesByIds.bind(AnnouncementController));
 routes.use(fileUpload(FileManagementConfig.fileUploadConfig));
 routes.post('/announcements/files/:announcementId', AnnouncementController.storeFiles.bind(AnnouncementController));
 

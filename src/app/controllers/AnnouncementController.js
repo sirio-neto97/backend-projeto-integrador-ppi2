@@ -1,6 +1,7 @@
 import crypto from 'crypto';
+import environmentConfig from '../../config/environment';
+import fileManagementConfig from '../../config/filemanagement';
 import fs from 'fs';
-import { resolve } from 'path';
 import * as Yup from 'yup';
 
 import Announcement from '../models/Announcement';
@@ -10,7 +11,8 @@ import AnnouncementImage from '../models/AnnouncementImage';
 class AnnouncementController {
 	constructor() {
 		this.errors = [];
-		this.imagesPath = resolve(__dirname, '..', '..', '..', 'tmp', 'uploads');
+		this.imagesPath = fileManagementConfig.public.path;
+		this.imagesSymbolicPath = environmentConfig.url + '/files';
 	}
 
 	async store(req, res) {
@@ -88,21 +90,30 @@ class AnnouncementController {
 			return res.status(400).json(this.getValidationErrors());
 		}
 
-		var response = await Announcement.findByPk(id);
-
-		const announcementImages = await AnnouncementImage.findAll({
-			where: {
-				id_announcement: id
-			},
-			attributes: ['id', 'path']
-		});
-
-		response = {
-			...response,
-			images: announcementImages
+		var response = {
+			...await Announcement.findByPk(id, {raw: true}),
+			'images': await this.getAnnouncementImages(id)
 		}
 
 		return res.json(response);
+	}
+
+	async getAnnouncementImages(id) {
+		const files = await AnnouncementImage.findAll({
+			where: {
+				id_announcement: id
+			},
+			attributes: ['id', 'name'],
+			raw: true
+		});
+
+		if (files) {
+			for (let i = 0; i < files.length; i++) {
+				files[i].path = this.imagesSymbolicPath + '/' + files[i].name;
+			}
+		}
+
+		return files;
 	}
 
 	async getAllForListing(req, res) {
@@ -146,6 +157,14 @@ class AnnouncementController {
 			return res.status(400).json(this.getValidationErrors());
 		}
 
+		const announcementImages = AnnouncementImage.findAll({
+			where: {
+				id_announcement: id
+			},
+			attributes: ['id'],
+			raw: true
+		});
+
 		await announcement.destroy();
 
 		return res.json({
@@ -156,35 +175,90 @@ class AnnouncementController {
 
 	async storeFiles(req, res) {
 		const that = this;
-		const files = req.files.files.length ? req.files.files : [req.files.files];
-		const { announcementId } = req.params;
 		var response = [];
 
-		if (!files.length) {
-			return;
+		if (req.files) {
+			const files = req.files.files.length ? req.files.files : [req.files.files];
+			const { announcementId } = req.params;
+
+			for (let i = 0; i < files.length; i++) {
+				var file = await that.writeFile(files[i], announcementId);
+				response.push(file);
+			}
 		}
-
-		await files.map(async function(file) {
-			const fileName = crypto.randomBytes(10).toString('hex') + file.name;
-			const path = that.imagesPath + '/' + fileName;
-
-			fs.writeFile(path, file.data, function(error) {
-				if (error) {
-					return res.status(500).json(error);
-				}
-			});
-
-			const { id } = await AnnouncementImage.create({
-				'id_announcement': announcementId,
-				'path': path
-			});
-
-			response.push({'id': id, 'path': path});
-		});
 
 		return res.json({
 			'uploadedImages': response
-		})
+		});
+	}
+
+	async deleteFilesByIds(req, res) {
+		const that = this;
+		const { ids } = req.body;
+		var response = [];
+
+		if (!ids) {
+			await this.setValidationError({'error': 'ValidationError', 'message': 'IDS is a required field'});
+		}
+
+		if (this.errors.length) {
+			return res.status(400).json(this.getValidationErrors());
+		}
+
+		const filesToDelete = await AnnouncementImage.findAll({
+			where: {
+				id: ids
+			},
+			raw: true
+		});
+
+		if (filesToDelete.length) {
+			for (let i = 0; i < filesToDelete.length; i++) {
+				var fileId = await that.deleteFile(filesToDelete[i]);
+				response.push(fileId);
+			}
+		}
+
+		return res.json({
+			'deletedImages': response
+		});
+	}
+
+	async writeFile(file, announcementId) {
+		const fileName = crypto.randomBytes(10).toString('hex') + file.name;
+		const path = this.imagesPath + '/' + fileName;
+
+		await fs.writeFile(path, file.data, function(error) {
+			if (error) {
+				return Response.status(500).json(error);
+			}
+		});
+
+		const { id } = await AnnouncementImage.create({
+			'id_announcement': announcementId,
+			'name': fileName
+		});
+
+		return {'id': id, 'name': fileName};
+	}
+
+	async deleteFile(objFile) {
+		const that = this;
+		const path = that.imagesPath + '/' + objFile.name;
+
+		await fs.unlink(path, function(error) {
+			if (error) {
+				return error;
+			}
+		});
+
+		await AnnouncementImage.destroy({
+			where: {
+				id: objFile.id
+			}
+		});
+
+		return objFile.id;
 	}
 
 	async validateStore(data) {

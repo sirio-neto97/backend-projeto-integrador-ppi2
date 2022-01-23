@@ -1,4 +1,5 @@
 const { resolve } = require('path');
+const { path } = require('./environment')
 
 module.exports = {
 	'fileUploadConfig': {
@@ -6,6 +7,6 @@ module.exports = {
 		'preserveExtension': true
 	},
 	'public': {
-		'path': resolve(__dirname, '..', '..', 'tmp', 'uploads')
+		'path': resolve(path, 'tmp', 'uploads')
 	}
 }

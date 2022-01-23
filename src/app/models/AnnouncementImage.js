@@ -5,7 +5,7 @@ class AnnouncementImage extends Model {
 		super.init(
 			{
 				id_announcement: Sequelize.INTEGER,
-				path: Sequelize.STRING
+				name: Sequelize.STRING
 			},
 			{
 				sequelize
