@@ -141,6 +141,30 @@ class AnnouncementController {
 		return res.json(response);
 	}
 
+	async deleteMass(req, res) { //TODO: CRIAR CAMADA DE SERVICO PARA MELHOR ORGANIZAÇAO E REAPROVEITAMENTO DE CODIGO
+		const { ids } = req.body;
+
+		if (ids && ids.length) {
+			for (let i = 0; i < ids.length; i++) {
+				const announcement = await Announcement.findByPk(ids[i]);
+				if (!announcement) {
+					await this.setValidationError({'error': 'ValidationError', 'message': 'Announcement not exists'});
+				}
+
+				if (this.errors.length) {
+					return res.status(400).json(this.getValidationErrors());
+				}
+
+				await announcement.destroy();
+			}
+		}
+
+		return res.json({
+			'ids': ids,
+			'message': 'Announcements deleted successfully'
+		});
+	}
+
 	async delete(req, res) {
 		const { id } = req.params;
 

@@ -29,6 +29,7 @@ routes.get('/announcements', AnnouncementController.getAllForListing);
 routes.get('/announcements/:id', AnnouncementController.getById.bind(AnnouncementController));
 routes.post('/announcements', AnnouncementController.store.bind(AnnouncementController));
 routes.put('/announcements/:id', AnnouncementController.update.bind(AnnouncementController));
+routes.delete('/announcements', AnnouncementController.deleteMass.bind(AnnouncementController));
 routes.delete('/announcements/:id', AnnouncementController.delete.bind(AnnouncementController));
 
 // Rotas componentes
