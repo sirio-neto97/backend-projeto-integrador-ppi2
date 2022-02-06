@@ -17,15 +17,24 @@ const routes = new Router();
 routes.use(cors());
 routes.use('/files', express.static(FileManagementConfig.public.path));
 
+/**
+ * Rotas públicas, acessíveis sem autenticação
+ */
 routes.post('/authenticate', SessionController.store);
 routes.post('/sendMessage', MessageController.send.bind(MessageController));
+routes.get('/announcements', AnnouncementController.getAllForListing.bind(AnnouncementController));
+routes.get('/announcements/:id', AnnouncementController.getById.bind(AnnouncementController));
+routes.get('/company/about', CompanyController.getAboutData.bind(CompanyController));
+routes.get('/company/contact', CompanyController.getContactData.bind(CompanyController));
 
+
+/**
+ * Rotas privadas
+ */
 routes.use(authMiddleware);
 routes.post('/users', UserController.store);
 routes.put('/users', UserController.update);
 
-routes.get('/announcements', AnnouncementController.getAllForListing.bind(AnnouncementController));
-routes.get('/announcements/:id', AnnouncementController.getById.bind(AnnouncementController));
 routes.post('/announcements', AnnouncementController.store.bind(AnnouncementController));
 routes.put('/announcements/:id', AnnouncementController.update.bind(AnnouncementController));
 routes.delete('/announcements', AnnouncementController.deleteMass.bind(AnnouncementController));

@@ -11,7 +11,8 @@ module.exports = {
 			},
 			id_announcement: {
 				type: Sequelize.INTEGER,
-				allowNull: false
+				allowNull: false,
+				references: { model: 'announcements', key: 'id' }
 			},
 			name: {
 				type: Sequelize.STRING,

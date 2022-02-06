@@ -148,7 +148,7 @@ class AnnouncementService extends ServiceBase {
 		});
 
 		var deletedImages = [];
-		if (announcementImages) {
+		if (announcementImages.length) {
 			var ids = [];
 			announcementImages.forEach(function(image) {
 				return ids.push(image.id);
@@ -215,6 +215,24 @@ class AnnouncementService extends ServiceBase {
 		return files;
 	}
 
+	async getImageForListing(announcementId) {
+		var path = this.imagesSymbolicPath + '/default.jpg';
+
+		const file = await AnnouncementImage.findOne({
+			where: {
+				id_announcement: announcementId
+			},
+			attributes: ['id', 'name'],
+			raw: true
+		});
+
+		if (file) {
+			path = this.imagesSymbolicPath + '/' + file.name;
+		}
+
+		return path;
+	}
+
 	async storeFiles(id, aFiles) {
 		var response = [];
 		for (let i = 0; i < aFiles.length; i++) {
@@ -248,7 +266,7 @@ class AnnouncementService extends ServiceBase {
 		var response = [];
 
 		if (!ids.length) {
-			await this.setValidationError({'error': 'ValidationError', 'message': 'IDS is a required field'});
+			await this.setError({'error': 'ValidationError', 'message': 'IDS is a required field'});
 		}
 
 		if (this.hasErrors()) {
@@ -293,7 +311,7 @@ class AnnouncementService extends ServiceBase {
 	}
 
 	async getAllForListing() {
-		return await Announcement.findAll({
+		const announcements =  await Announcement.findAll({
 			order: [
 				['id', 'DESC']
 			],
@@ -314,6 +332,12 @@ class AnnouncementService extends ServiceBase {
 			],
 			raw: true
 		});
+
+		for (let i = 0; i < announcements.length; i++) {
+			announcements[i]['imagePath'] = await this.getImageForListing(announcements[i]['id']);
+		}
+
+		return announcements;
 	}
 }
 
