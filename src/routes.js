@@ -46,6 +46,7 @@ routes.put('/components/:id', ComponentController.update.bind(ComponentControlle
 routes.delete('/components/:id', ComponentController.delete.bind(ComponentController));
 
 routes.post('/company', CompanyController.store.bind(CompanyController));
+routes.get('/company', CompanyController.getAll.bind(CompanyController));
 
 routes.delete('/files', AnnouncementController.deleteFilesByIds.bind(AnnouncementController));
 routes.use(fileUpload(FileManagementConfig.fileUploadConfig));

@@ -36,6 +36,23 @@ class CompanyController {
 		});
 	}
 
+	async getAll(req, res) {
+		const { nome, cnpj, sobre, localizacao, email,
+			telefone, whatsapp, instagram, facebook } = await Company.findOne();
+
+		return res.json({
+			nome,
+			cnpj,
+			sobre,
+			localizacao,
+			email,
+			telefone,
+			whatsapp,
+			instagram,
+			facebook
+		});
+	}
+
 	async getAboutData(req, res) {
 		const { sobre } = Company.findOne();
 
